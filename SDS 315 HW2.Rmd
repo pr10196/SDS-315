@@ -1,0 +1,203 @@
+---
+title: "Homework 2 SDS 315"
+author: "Pranav Rao"
+date: "2024-01-29"
+UTEID: pr25344
+---
+
+```{r, echo=FALSE}
+[Link Text](https://github.com/your-username/your-repository)
+```
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+profs <- read.csv("~/SDS/profs.csv")
+```
+
+## Problem 1
+
+
+## Part A
+
+```{r, echo=FALSE}
+hist(profs$eval, col = "orange", main = "Distribution of Course Evaluation Scores", xlab = "Evaluation Score", xlim = c(0,5.0), ylim = c(0, 120))
+```
+The histogram above is skewed left and conveys the idea that professors mainly received an evaluation score of a 3 or higher.  
+
+
+## Part B
+```{r, echo=FALSE}
+is_native <- profs$eval[which(profs$native == "yes")]
+not_native <- profs$eval[which(profs$native == "no")]
+boxplot(is_native, not_native, col = "red", main = "Distribution of Course Evaluation Scores and Native English Speaking", xlab = "Native English Speakers", ylab = "Course Evaluation Score", names = c("Yes", "No"), ylim = c(0,5.0))
+```
+The boxplot above conveys that professors that are native English speakers receive a higher maximum and median course evaluation score. 
+
+
+## Part C
+```{r, echo=FALSE}
+ggplot(profs, aes(x = eval)) + geom_histogram(aes(fill = gender)) + facet_wrap(~ gender, nrow = 2) + labs(title = "Distribution of Course Evaluation Scores for Male and Female Instructors", x = "Course Evaluation Score", y = "Frequency") + xlim(0, 5.0) + ylim(0, 25)
+```
+The faceted histograms above appear to be skewed left and contain a minimum score of 2. The histogram of the male professors appears to not have a recorded score of 4 and between 4.5 and 4.75, while the female professor histogram does not have a recorded score of 4.   
+
+
+## Part D
+```{r, echo=FALSE}
+plot(profs$beauty, profs$eval, main = "Correlation between Professor's Attractiveness and Evaluation Scores", xlab = "Physical Attractiveness", ylab = "Course Evaluation Scores", xlim = c(-2,2), ylim = c(0,5.0), col = "blue")
+```
+The scatterplot shown above has a strong, positive, linear relationship, and there appears to contain a minimum attraction score at approximately 1.5.
+
+## Problem 2
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+bikeshare <- read.csv("~/SDS/bikeshare.csv")
+```
+
+## Plot A
+
+```{r, echo=FALSE}
+day1 = bikeshare %>%
+  group_by(hr) %>%
+  summarize(mean_bikerides = mean(total))
+  
+ggplot(day1) + geom_line(aes(x = hr, y = mean_bikerides))
+```
+The line graph above displays the x variable, hr, which represents the total number of hours throughout the day and the y variable, mean_bikerides, which represents the average amount of bikes rented per hour. 
+
+
+## Plot B
+```{r, echo=FALSE}
+day2 = bikeshare %>%
+  group_by(hr, workingday) %>%
+  summarize(mean_bikerides = mean(total))
+
+ggplot(day2) + geom_line(aes(x = hr, y = mean_bikerides)) + facet_wrap(~ workingday, nrow = 1)
+```
+The faceted line graph above displays the x variable, hr, which similarly represents the total number of hours throughout the day, and the y variable, which represents the average number of bikes used. Above the line graph, the value 0 represents data calculated from a non working day, while the value 1 represents data collected from working days.
+
+
+## Plot C
+```{r, echo=FALSE}
+day3 = bikeshare %>%
+  filter(hr == 8) %>%
+  group_by(weathersit, workingday) %>%
+  summarize(mean_bikerides = mean(total))
+
+ggplot(day3) + geom_col(aes(x = factor(weathersit), y = mean_bikerides)) + facet_wrap(~workingday)
+```
+The faceted bar graph above contains the x variable, factor(weathersit), which represents the weather situation, and the y variable, mean_bikerides, which represents the average amount of rides at 9 AM. Similar to the previous faceted line graph, the value 0 represents data calculated from a non working day, while the value 1 represents data collected from working days.
+
+
+## Problem 3
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+capmetro_UT <- read.csv("~/SDS/capmetro_UT.csv")
+
+capmetro_UT = mutate(capmetro_UT, day_of_week = factor(day_of_week, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), month = factor(month, levels = c("Sep", "Oct", "Nov")))
+```
+
+## 1
+
+```{r, echo=FALSE}
+average_boardings = capmetro_UT %>%
+  group_by(hour_of_day, day_of_week, month) %>%
+  summarize(averages = mean(boarding)) %>%
+  arrange(averages)
+
+ggplot(average_boardings, aes(x = hour_of_day, y = averages)) + geom_line(aes(color = month)) + facet_wrap(~ day_of_week, nrow = 4) + labs(title = "The Average Boardings of Each Hour, Day, and Month", x = "Hour in the Day", y = "Average Boardings") + xlim(0, 22) + ylim(0, 200)
+```
+The graph above displays the average bus boardings that happened at a specific time during the day, and these times are formed into faceted graphs in order to convey the average bus boardings that occur on a specific day in the week and during a specific month during the year. The average bus boardings are shown to maintain a similar average on weekdays and significantly increase on Saturday and Sunday. I believe the average bus boardings are lesser on Mondays in September because September occurs soon after college begins and traveling occurs less for UT students. Average boardings on Wednesday, Thursday, and Friday in November
+look lower than the other months because students are on Thanksgiving break, meaning that there will be a significant increase in student migration on campus at this time.  
+
+
+## 2
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+capmetro_UT <- read.csv("~/SDS/capmetro_UT.csv")
+```
+
+```{r, echo=FALSE}
+capmetro_UT <- subset(capmetro_UT, select = -alighting)
+capmetro_UT <- subset(capmetro_UT, select = -month)
+capmetro_UT <- subset(capmetro_UT, select = -day_of_week)
+
+capmetro_UT$Legend <- capmetro_UT$weekend
+
+ggplot(data = capmetro_UT, aes(x = temperature, y = boarding, color = Legend)) + geom_point() + facet_wrap(~ hour_of_day) + labs(title = "Correlation between Temperature by Hour of Day and Boardings", x = "Temperature by Hour of Day", y = "Boardings") 
+```
+The faceted scatterplot above displays the correlation between the temperatures during specific hours throughout the day and the amount of boardings that took place for UT students. Temperature does seem to produce an effect on the number of UT students riding the bus, as this graph illustrates that the earlier the boarding times are, there are less students boarding the Metro buses.  
+
+
+## Problem 4
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+billboard <- read.csv("~/SDS/billboard.csv")
+```
+
+## Part A
+
+```{r, echo=FALSE}
+top10_songs_table <- billboard %>%
+  group_by(song, performer) %>%
+  summarize(count = sum(!is.na(week_position))) %>%
+  arrange(desc(count)) %>%
+  head(10)
+View(top10_songs_table)
+```
+
+The table produced displays the top 10 most popular songs that were on the Billboard charts, and the popularity of the songs were determined by the count variable, which represents the amount of weeks that the song was number one on the Billboard charts. 
+
+
+## Part B
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+billboard <- read.csv("~/SDS/billboard.csv")
+```
+
+```{r, echo=FALSE}
+musical_div <- billboard %>%
+  filter(year != 1958 & year != 2021) %>%
+  #distinct(year, song) %>%
+  group_by(year) %>%
+  summarize(unique_songs = n())
+
+ggplot(musical_div, aes(x = year, y = unique_songs)) +
+  geom_line() + labs(title = "Musical Diversity of Billboard Top 100 Over Period of Time",
+    x = "Year", y = "Number of Unique Songs")
+```
+This line graph has a very interesting trend, being that the graph produces a similar shape after increasing and decreasing unique songs are recorded over time.
+
+
+## Part C
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+billboard <- read.csv("~/SDS/billboard.csv")
+```
+
+```{r, echo=FALSE}
+at_least30 <- billboard %>%
+  group_by(performer, song) %>%
+  filter(sum(!is.na(week_position)) >= 10) %>%
+  summarize(ten_week_hits = n()) %>%
+  group_by(performer) %>%
+  filter(sum(ten_week_hits) >= 30) %>%
+  summarize(total_ten_week_hits = sum(ten_week_hits))
+
+ggplot(at_least30, aes(x = reorder(performer, -total_ten_week_hits), y = total_ten_week_hits)) +
+  geom_bar(stat = "identity", fill = "purple") + labs(title = "Number of Ten Week Hits for Top 19 Artists in U.S. Musical History (1958-2020)",x = "Artist", y = "Number of Ten-Week Hits") 
+```
+
+The bar plot above displays the 19 artists that accomplished the feat of having at least 30 songs being "ten-week hits" from the period 1958 to 2020. This plot is shown to be right skewed, signifying that the 19 different artist produced less and less "ten-week hits" with at least 30 songs produced.
