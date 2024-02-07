@@ -1,0 +1,153 @@
+---
+title: "SDS 315 HW3"
+author: "Pranav Rao"
+date: "2024-02-04"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+UTEID: pr25344
+---
+
+```{r , echo=FALSE}
+cat("Visit my GitHub repository: [SDS-315](https://github.com/pr10196/SDS-315)\n")
+```
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(mosaic)
+creatinine <- read.csv("~/SDS/SDS 315/creatinine.csv")
+```
+
+## Problem 1
+
+
+## Part A
+
+```{r, echo=FALSE}
+head(creatinine)
+ggplot(creatinine) +
+  geom_point(aes(x = age, y = creatclear)) +
+  geom_smooth(aes(x = age, y = creatclear), method = 'lm')
+model_creatclear = lm(creatclear ~ age, data = creatinine)
+coef(model_creatclear)
+```
+
+We should expect a creatinine clearance rate of approximately 113.7. This was determined through the linear regression equation above, 147.8129158-0.6198159x, and the x value for this question was 55, representing the age of a given patient.
+
+
+## Part B
+
+```{r, echo=FALSE}
+coef(model_creatclear)
+```
+
+On average, the creatinine clearance rate decreases by 0.6198159 mL/minute for every additional year of age. This was determined by calculating the coefficients of the linear regression model and finding the slope of the model, being the "age" variable.
+
+## Part C
+
+```{r, echo=FALSE}
+coef(model_creatclear)
+```
+
+The linear regression model equation, 147.8129158-0.6198159(40), calculates a 40-year-old's average rate, which is substituted for x, to be approximately 123, meaning that the rate of 135 is healther than the average rate for a 40-year-old man. In comparison, a 60-year-old man has an average approximate rate of 110.6, according to the equation, 147.8129158-0.6198159(60), which is slightly lower than the 60-year-old man with a rate of 112. Therefore, a 40-year-old with a rate of 135 has a healthier creatinine clearance rate. 
+
+
+## Problem 2
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(mosaic)
+library(dplyr)
+library(tibble)
+marketmodel <- read.csv("~/SDS/SDS 315/marketmodel.csv")
+```
+
+
+```{r, echo=FALSE}
+stock_ticker_symbol <- c("AAPL", "GOOG", "MRK", "JNJ", "WMT", "TGT")
+stock_regression_summary <- data.frame(TickerSymbol = character(),
+                                 Intercept = numeric(), 
+                                 Slope = numeric(),
+                                 R_squared = numeric(), 
+                                 stringsAsFactors = FALSE)
+                               
+for (ticker_symbol in stock_ticker_symbol) {
+  #stock_data <- filter(marketmodel, TickerSymbol == ticker_symbol)
+  model_marketmodel <- lm(formula(paste(ticker_symbol, "~ SPY")), data = marketmodel)
+  
+  model_marketmodel_summary <- summary(model_marketmodel) 
+  
+  reg_intercept <- model_marketmodel_summary$coefficients["(Intercept)", "Estimate"]
+  reg_slope <- model_marketmodel_summary$coefficients["SPY", "Estimate"]
+  reg_rsquared <- model_marketmodel_summary$r.squared
+  
+  stock_regression_summary <- rbind(stock_regression_summary, data.frame(TickerSymbol = ticker_symbol, Intercept = reg_intercept, Slope = reg_slope, R_squared = reg_rsquared))
+}
+```
+
+The "beta" of a stock measures the systematic risk of a stock and the percentage change of a stock's return when given a one percent chance in the market portfolio. In relation to the linear regression equation, the beta of a stock is calculated by subtracting the B0(k), expected rate of return of stock (k) when the market return is zero, and et(k), the residual for stock "K", from Yt(k), the rate of return of an individual stock "k" and dividing the newly produced difference by Xt, which is the mark rate of return. The table above displays the regression results of the ticker symbols AAPL, GOOG, MRK, JNJ, WMT, and TGT, which include the  Intercepts, Slopes, and R_squared values. The GOOG stock displays the strongest correlation, followed by the stocks JNJ, MRK, WMT, TGT, and AAPL. Based on the resulting Slope values produced in the regression results, the WMT stock has the lowest systematic risk, while the AAPL stock has the highest systematic risk. 
+
+
+
+## Problem 3
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+```{r, echo=FALSE}
+covid <- read.csv('covid.csv')
+spain <- filter(covid, country == "Spain")
+italy <- filter(covid, country == "Italy")
+
+exp_growthmodel <- function(x, a, b) {
+  return(a * exp(b*x))
+}
+
+spain_model_fit <- lm(log(deaths) ~ days_since_first_death, data = spain)
+italy_model_fit <- lm(log(deaths) ~ days_since_first_death, data = italy)
+
+spain_growth_rate <- round(coef(spain_model_fit)[2], 3)
+spain_doubling_time <- round(log(2) / spain_growth_rate)
+italy_growth_rate <- round(coef(italy_model_fit)[2], 3)
+italy_doubling_time <- round(log(2) / italy_growth_rate)
+
+spain_and_italy_plot <- ggplot(data = covid, aes(x = days_since_first_death, y = deaths, color = country)) +
+  geom_line() +
+  labs(title = "Daily Deaths by Country",
+       x = "Days Since First Death",
+       y = "Reported Daily Deaths") +
+  theme_minimal()
+
+spain_and_italy_plot
+```
+
+The estimated growth rate for Italy is 0.183, and the estimated doubling time for Italy is 4 days. In comparison, the estimated growth rate for Italy is 0.276, and the estimated doubling time for Italy is 3 days.
+
+
+## Problem 4
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+```{r, echo=FALSE}
+milk <- read.csv("~/SDS/SDS 315/milk.csv")
+
+milk_dataset <- milk %>%
+  mutate(log_sales = log(sales), log_price = log(price))
+
+lin_model = lm(log_sales ~ log_price, data = milk_dataset)
+lin_model
+
+est_price_elasticity <- coef(lin_model)['log_price']
+est_price_elasticity
+```
+
+The estimated price elasticity of demand for milk is -1.619, and this estimate was calculated by utilizing the power-law model for the milk sales dataset. Through utilizing this dataset, a regression on the log-log scale was ran and summarized the sales of milk across different prices by calculating the price elasticity of demand for milk, which was represented by the log price variable. 
