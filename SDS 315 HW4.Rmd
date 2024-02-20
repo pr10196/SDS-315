@@ -10,8 +10,7 @@ UTEID: pr25344
 ---
 
 ```{r , echo=FALSE}
-#cat("Visit my GitHub repository: [SDS-315]()
-#ADD LINK!!!
+#cat("Visit my GitHub repository: [SDS-315](https://github.com/pr10196/SDS-315/blob/main/SDS%20315%20HW4.Rmd\n")  
 ```
 
 ```{r, echo=FALSE}
