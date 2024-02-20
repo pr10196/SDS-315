@@ -1,0 +1,289 @@
+---
+title: "SDS 315 HW4"
+author: "Pranav Rao"
+date: "2024-02-19"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+UTEID: pr25344
+---
+
+```{r , echo=FALSE}
+#cat("Visit my GitHub repository: [SDS-315]()
+#ADD LINK!!!
+```
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(dplyr)
+library(mosaic)
+library(boot)
+library(broom)
+library(tidyr)
+```
+
+
+## Problem 1
+
+## Theory A
+
+The first theory discusses the idea that gas stations tend to charge more money to their consumers if they lack competition with other gas station companies. 
+
+```{r, echo=FALSE}
+gasprices <- read.csv("~/SDS/SDS 315/gasprices.csv")
+mean(Price ~ Competitors, data = gasprices)
+gasprices__price_comp_bootstrap = resample(gasprices)
+mean(Price ~ Competitors, data = gasprices__price_comp_bootstrap)
+boot_price_competitors = do(1000)*mean(Price ~ Competitors, data=resample(gasprices))
+head(boot_price_competitors)
+confint(boot_price_competitors, level = 0.95)
+```
+
+
+## Evidence
+The theory above is apparent, as the mean of the overall population of the gas prices data indicated a greater mean of approximately 1.87 when a company has a lack of competition with other gas companies, in comparison to the mean of 1.85 for companies that have direct competition. In addition, after bootstrapping the data using samples, the companies with a lack of competition still produced a greater lower and upper mean when compared to companies with competiton. 
+
+## Conclusion
+According to the data above, the theory that gas stations charge more if they lack direct competition in sight is supported.
+
+
+## Theory B 
+
+The second theory states that the richer areas in the Austin area signify that the gas prices will be higher.
+
+```{r, echo=FALSE}
+gasprices <- read.csv("~/SDS/SDS 315/gasprices.csv")
+model_theory_b <- lm(Price ~ Income, data = gasprices)
+tidy(model_theory_b, conf.int = TRUE)
+```
+## Evidence
+The theory above is supported by the data above. Moreover, the p-value of the regression model is approximately 0.000041165, and the coefficient of income is approximately 1.2383e-06. These values convey that there is a positive association between the variables, Price and Income. In addition, the coefficient of income signifies that when the income increases, the price of gas increases as well.
+
+## Conclusion
+The data produced above does support the theory that the gas prices of an area increases in relation to the wealthiness of that area. 
+
+
+## Theory C 
+
+The third theory states that gas stations that are located near stoplights charge more than the average cost. 
+
+```{r, echo=FALSE}
+gasprices <- read.csv("~/SDS/SDS 315/gasprices.csv")
+model_theory_c <- lm(Price ~ Stoplight, data = gasprices)
+tidy(model_theory_c, conf.int = TRUE)
+```
+## Evidence
+The theory above is not supported by the data. This is conveyed through the two variables, the intercept of stoplights, being approximately -0.0033 and the the p-value, being approximately 0.8449. The negative coefficient and the large p-value convey the idea that there is not a significant increase in gas prices when they are near stoplights.
+
+## Conclusion
+As supported through the statistical evidence above, the theory that gas stations at stoplights charge more money is not proven through the data collected.
+
+## Theory D
+
+The fourth theory states that gas stations that have a direct highway access charge more than the average cost. 
+
+```{r, echo=FALSE}
+gasprices <- read.csv("~/SDS/SDS 315/gasprices.csv")
+model_theory_d <- lm(Price ~ Highway, data = gasprices)
+tidy(model_theory_d, conf.int = TRUE)
+```
+
+
+## Evidence
+The data above contains a value of approximately 0.0457 for the intercept of highways and a p-value of approximately 0.0193. These positive values convey a positive linear relationship and indicate that gas stations that have access from highways charge more money. 
+
+## Conclusion
+Based on the statistical evidence, the theory that gas stations with direct highway access charge more money can be supported utilizing the data above.
+
+
+
+## Theory E
+
+The final theory states that the Shell gas company charges more than all other competing gas company brands. 
+
+```{r, echo=FALSE}
+gasprices <- read.csv("~/SDS/SDS 315/gasprices.csv")
+gasprices$is_company_Shell <- ifelse(gasprices$Brand == 'Shell', 1, 0)
+model_theory_e <- lm(Price ~ is_company_Shell, data = gasprices)
+tidy(model_theory_e, conf.int = TRUE)
+```
+
+
+## Evidence
+The intercept of the Shell company is approximately 0.0274, and the p-value of the Shell company is approximately 0.127. These resulting values show that the values are not statistically significant at the 5 percent level since the value 0 is included in the confidence interval. Therefore, the data conveys the idea that the Shell company does not charge more money than other gas company brands. 
+
+
+## Conclusion 
+The data above does not convey statistical significance between the gas prices of the company Shell when compared to other gas companies, so the data cannot prove that Shell sells higher gas prices than other gas companies. 
+
+
+## Problem 2
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(mosaic)
+library(ggplot2)
+sclass <- read.csv("~/SDS/SDS 315/sclass.csv")
+```
+
+
+## Part A
+
+```{r, echo=FALSE}
+sclass_2011_year_AMG <- sclass %>%
+  filter(year == 2011, trim == "63 AMG")
+
+avg_mean_mileage <- function(data, indices) {
+  mean(data$mileage[indices])
+}
+sclass_part1_bootstrap <- do(1000) * avg_mean_mileage(resample(sclass_2011_year_AMG))
+confint(sclass_part1_bootstrap, level=0.95)
+```
+
+
+## Part B
+
+```{r, echo=FALSE}
+sclass_2014_year_550_AMG <- sclass %>%
+  filter(year == 2014, trim == "550")
+
+# Define a binary variable for black color
+sclass_2014_year_550_AMG$isBlack <- ifelse(sclass_2014_year_550_AMG$color == "Black", 1, 0)
+
+# Define the function to calculate the proportion of black cars
+proportion_black <- function(data, indices) {
+  
+  sampledData <- data[indices, , drop = FALSE]  
+  
+  # Calculate and return the proportion of black cars
+  mean(sampledData$isBlack)
+}
+
+# Perform the bootstrap using the isBlack column wrapped in a dataframe
+results_bootstrapping <- boot(data = data.frame(isBlack = sclass_2014_year_550_AMG$isBlack), 
+                  statistic = proportion_black, R = 1000)
+
+# Calculate the 95% confidence interval for the proportion
+ci_b <- boot.ci(results_bootstrapping, type = "perc")
+
+prop_black_cars <- mean(sclass_2014_year_550_AMG$isBlack)
+ci_b
+
+prop_black_cars
+ci_b
+```
+
+## Problem 3
+
+```{r, echo=FALSE}
+nbc_pilotsurvey <- read.csv("~/SDS/SDS 315/nbc_pilotsurvey (1).csv")
+```
+
+## Part A
+
+
+```{r, echo=FALSE}
+part_a_nbc <- nbc_pilotsurvey[nbc_pilotsurvey$Show == "Living with Ed" | nbc_pilotsurvey$Show == "My Name is Earl",]
+t.test(part_a_nbc$Q1_Happy ~ part_a_nbc$Show)
+```
+
+## Question:
+Is there evidence to show that the watching the show "Living with Ed" makes people happier when compared to "My Name is Earl"? 
+
+## Approach: 
+A Welch two sample t-test was utilized in order to compare the different mean responses to the Q1_Happy question for the two shows.   
+
+
+## Results:
+The 95 percent confidence interval of the difference in mean Q1_Happy responses produces an interval of approximately -0.1030 to 0.4011. The test also produces a p-value of 0.2447, signifying that there is not a considerable difference in the responses in happiness when comparing the two shows. 
+
+
+## Conclusion:
+According to the confidence interval, since there is a p-value greater than 0.05 and the value 0 is included in the confidence interval, no statistical evidence is shown to support the claim that one of the shows produces a happier Q1_Happy response for viewers. 
+
+
+## Part B
+
+```{r, echo=FALSE}
+part_b_nbc <- nbc_pilotsurvey[nbc_pilotsurvey$Show == "The Biggest Loser" | nbc_pilotsurvey$Show == "The Apprentice: Los Angeles",]
+t.test(part_b_nbc$Q1_Annoyed ~ part_b_nbc$Show)
+```
+
+## Question:
+Does the show "The Biggest Loser" or the show "The Apprentice: Los Angeles" make people feel more annoyed?
+
+## Approach: 
+The Welch two sample t-test was again utilized in order to compare the difference in the mean of Q1_annoyed scores between the two shows listed above.
+
+
+## Results:
+The 95 percent confidence interval of the difference in mean Q1_Annoyed responses produces an interval of approximately 0.0174 to 0.5246. The test also produces a p-value of 0.03628, signifying that there is a difference in the annoyed responses when comparing the two shows.
+
+
+## Conclusion:
+Since the p-value is less than 0.05 and the confidence interval is positive and greater than 0, the data conveys that "The Apprentice: Los Angeles" produces a statistically greater mean Q1_Annoyed score. This signifies that viewers find this film to be more annoying than "The Biggest Loser" on average.
+
+
+## Part C
+
+```{r, echo=FALSE}
+part_c_nbc <- nbc_pilotsurvey[nbc_pilotsurvey$Show == "Dancing with the Stars",]
+x <- sum(nrow(part_c_nbc[part_c_nbc$Q2_Confusing == 4,]), nrow(part_c_nbc[part_c_nbc$Q2_Confusing == 5,]))
+prop.test(x, (nrow(part_c_nbc)), conf.level = 0.95)
+```
+
+## Question:
+What proportion of American TV watchers do we expect to call the show "Dancing with the Stars" confusing?
+
+
+## Approach: 
+The 1-sample proportions test with continuity correction was utilized in order to approximate the proportion of viewers who would give a response of 4 or greater to the Q2_Confusing question.
+
+
+## Results:
+The 95 percent confidence interval of the proportion of viewers who find the show to be confusing produces an interval of approximately 0.0445 to 0.1289. The test also produces a p-value of approximately 0.07734, signifying that there is not a considerable difference in the confused responses for the show "Dancing with the Stars". 
+
+
+## Conclusion:
+The confidence interval does not include 0, indicating that the test is statistically significant. However, the p-value is greater than 0.05, and this indicates that the majority of viewers of this film do not find it confusing. 
+
+
+## Problem 4
+
+```{r, echo=FALSE}
+ebay <- read.csv("~/SDS/SDS 315/ebay.csv")
+ebay_sales_data <- ebay %>%
+  mutate(revenue_ratio = rev_after / rev_before)
+
+mean_treatment_group <- mean(ebay_sales_data$revenue_ratio[ebay_sales_data$adwords_pause == 1])
+mean_control_group <- mean(ebay_sales_data$revenue_ratio[ebay_sales_data$adwords_pause == 0])
+
+bootstrap_function <- function(data, indices) {
+  bootstrap_sample_data <- data[indices, ]
+  treatment_mean_value <- mean(bootstrap_sample_data$revenue_ratio[bootstrap_sample_data$adwords_pause == 1])
+  control_mean_value <- mean(bootstrap_sample_data$revenue_ratio[bootstrap_sample_data$adwords_pause == 0])
+  return(treatment_mean_value - control_mean_value)
+}
+
+set.seed(123) 
+bootstrap_results <- boot(data = ebay_sales_data, statistic = bootstrap_function, R = 10000)
+
+#Produces the 95% confidence interval
+bootstrap_conf_int <- boot.ci(bootstrap_results, type = "perc")$percent[4:5]
+```
+
+## Question
+Is the revenue ratio for eBay the same in the control and treatment groups, or does the data favor the idea that paid search advertising on Google creates extra revenue for eBay?
+
+
+## Approach
+The approach utilized for this question was the difference of means test, and this test compared the revenue ratios between the control DMAs and the treatment DMAs. Moreover, this problem required the use of the t test, which allowed the comparison of means between the treatment and control groups. 
+
+
+## Results
+The mean value of the revenue ratio for the treatment DMAs is approximately 0.8966, and the mean value for the control DMAs is approximately 0.9489. In addition, the 95 percent confidence interval for the mean difference in revenue ratios between the treatment and control groups is approximately -0.0917 to -0.0140. Therefore, this interval conveys the idea that the data shows a statistically significant decrease in the revenue ratio within the treatment group.
+
+
+## Conclusion
+According to the data, eBay's sponsored search advertising on Google appears to have increased income. The revenue ratio was lower in DMAs with paused advertising when compared to those with uninterrupted advertising. The treatment group's revenue ratio, with a 95 percent confidence interval, is lower, as exemplified with the negative interval. This implies that sponsored advertisements contribute to the greater revenue.
