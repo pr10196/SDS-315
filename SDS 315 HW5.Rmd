@@ -26,8 +26,6 @@ library(mosaic)
 nflip(n=2021, prob = 0.024)
 sim_trades = do(100000) * nflip(n=2021, prob = 0.024)
 head(sim_trades)
-#ggplot(sim_trades) + 
- # geom_histogram(aes(x=nflip), binwidth=0.5)
 sim_trades_2 = rbinom(n=100000, size = 2021, prob = 0.024)
 sum(sim_trades_2 >= 70)/100000
 testStatistic <- 70
