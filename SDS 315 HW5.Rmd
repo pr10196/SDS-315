@@ -1,0 +1,135 @@
+---
+title: "SDS 315 HW5"
+author: "Pranav Rao"
+date: "2024-02-26"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+UTEID: pr25344
+---
+
+```{r , echo=FALSE}
+cat("Visit my GitHub repository: [SDS-315](https://github.com/")
+```
+
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(mosaic)
+```
+
+
+## Problem 1
+
+```{r, echo=FALSE}
+nflip(n=2021, prob = 0.024)
+sim_trades = do(100000) * nflip(n=2021, prob = 0.024)
+head(sim_trades)
+#ggplot(sim_trades) + 
+ # geom_histogram(aes(x=nflip), binwidth=0.5)
+sim_trades_2 = rbinom(n=100000, size = 2021, prob = 0.024)
+sum(sim_trades_2 >= 70)/100000
+testStatistic <- 70
+pvalue <- mean(sim_trades_2 >= testStatistic)
+pvalue
+hist(sim_trades_2, breaks = 30, freq = FALSE, col = 'skyblue', border = 'black', xlab = 'Number of Flagged Trades', ylab = 'Probability Density', main = 'Probability Distribution of Flagged Trades')
+abline(v = testStatistic, col = 'red', lty = 2)
+```
+
+The null hypothesis that is being tested in this problem is that securities trades from the Iron Bank are flagged at the same at the same baseline rate of 2.4 percent as that of other traders. The test statistic that will be utilized in this experiment is the number of flagged trades out of the 2021 total trades by Iron Bank employees. The p-value of the probability distribution is approximately 0.002. Through analyzing the probability distribution and calculating the p-value, we can reject the null hypothesis, meaning that we find that the observed number of flagged trades is unlikely to occur by a random chance, and there is now evidence that suggests that the Iron Bank's trades were flagged at a higher rate than 2.4 percent. 
+
+
+
+## Problem 2
+
+```{r, echo=FALSE}
+nflip(n=50, prob = 0.03)
+sim_inspect_violations = do(100000) * nflip(n=50, prob = 0.03)
+head(sim_inspect_violations)
+sim_violations <- rbinom(100000, 50, 0.03)
+sum(sim_violations >= 50)/100000
+test_statistic <- 8
+pValue <- mean(sim_violations >= test_statistic)
+pValue
+
+hist(sim_violations, breaks = 30, freq = FALSE, col = 'purple', border = 'black', xlab = 'Number of Inspection Violations', ylab = 'Probability Density', main = 'Probability Distribution of Violations')
+abline(v = test_statistic, col = 'blue', lty = 2)
+```
+
+The null hypothesis that will be tested is that Gourmet Bites' rate of health code violations as well as other restaurants within the city are, on average, cited at the same 3 percent baseline rate. The test statistic that will be observed in this experiment is the number of reported health code violations that were reported in Gourmet Bites' inspections. The p-value calculated in this experiment is approximately 0. Based on the probability distribution and the p-value, we reject the null hypothesis, and this conveys that the observed data for Gourmet Bites' inspections are inconsistent with the idea that Gourmet Bites' rate of health code violations is the same rate as the rate averages of other restaurants throughout the city.  
+
+
+## Problem 3
+
+## Part A
+
+```{r, echo=FALSE}
+brown_sentences <- readLines("C:/Users/phisf/OneDrive/Documents/SDS/brown_sentences.txt")
+letter_frequencies <- read.csv("~/SDS/SDS 315/letter_frequencies.csv")
+
+remove_convert_count <- function(sentence) {
+  sentence <- gsub("[^A-Za-z]", "", sentence)
+  sentence <- toupper(sentence)
+  table(strsplit(sentence, "")[[1]])
+}
+
+obs_letter_counts <- lapply(brown_sentences, remove_convert_count)
+
+letter_frequencies <- letter_frequencies[order(letter_frequencies$Letter), ]
+
+chi_sq_statistic <- sapply(obs_letter_counts, function(observed) {
+  observed <- observed[letter_frequencies$Letter]
+  observed[is.na(observed)] <- 0
+  
+  total_obs_letters <- sum(observed)
+  expected_letters <- total_obs_letters * letter_frequencies$Probability
+  
+  chi_sq <- sum((observed - expected_letters)^2 / expected_letters)
+  return(chi_sq)
+})
+```
+
+
+## Part B
+
+```{r, echo=FALSE}
+given_sentences <- c(
+  "She opened the book and started to read the first chapter, eagerly anticipating what might come next.",
+  "Despite the heavy rain, they decided to go for a long walk in the park, crossing the main avenue by the fountain in the center.",
+  "The museum’s new exhibit features ancient artifacts from various civilizations around the world.",
+  "He carefully examined the document, looking for any clues that might help solve the mystery.",
+  "The students gathered in the auditorium to listen to the guest speaker’s inspiring lecture.", 
+  "Feeling vexed after an arduous and zany day at work, she hoped for a peaceful and quiet evening at home, cozying up after a quick dinner with some TV, or maybe a book on her upcoming visit to Auckland.",
+  "The chef demonstrated how to prepare a delicious meal using only locally sourced ingredients, focusing mainly on some excellent dinner recipes from Spain.",
+  "They watched the sunset from the hilltop, marveling at the beautiful array of colors in the sky.",
+  "The committee reviewed the proposal and provided many points of useful feedback to improve the project’s effectiveness.", 
+  "Despite the challenges faced during the project, the team worked tirelessly to ensure its successful completion, resulting in a product that exceeded everyone’s expectations."
+)
+
+reference_distrib <- chi_sq_statistic
+
+new_chi_sq_statistic <- sapply(given_sentences, function(sentence) {
+  observed <- remove_convert_count(sentence)
+  observed <- observed[letter_frequencies$Letter]
+  observed[is.na(observed)] <- 0
+  total_obs_letters <- sum(observed)
+  expected_letters <- total_obs_letters * letter_frequencies$Probability
+  chi_sq <- sum((observed - expected_letters)^2 / expected_letters)
+  return(chi_sq)
+})
+
+given_p_values <- sapply(new_chi_sq_statistic, function(chi_sq) {
+  calculated_p_value <- sum(reference_distrib >= chi_sq) / length(reference_distrib)
+  return(calculated_p_value)
+})
+
+data_frame_results <- data.frame(Sentences = given_sentences, P_Values = given_p_values)
+
+library(knitr)
+data_frame_results$P_Values <- round(data_frame_results$P_Values, 3)
+kable(data_frame_results, format = "markdown", col.names = c("Sentences", "P-Values"))
+```
+
+
+The sentence, "Feeling vexed after an arduous and zany day at work, she hoped for a peaceful and quiet evening at home, cozying up after a quick dinner with some TV, or maybe a book on her upcoming visit to Auckland.", was AI generated. This is the case since this sentence has the smallest p-value, and it has a significant range of difference when compared to the other p-values of the other sentences. 
