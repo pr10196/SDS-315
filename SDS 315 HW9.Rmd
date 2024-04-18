@@ -1,0 +1,139 @@
+---
+title: "SDS 315 HW 9"
+author: "Pranav Rao" 
+date: "2024-04-17"
+output: pdf_document
+UTEID: pr25344
+---
+
+
+```{r , echo=FALSE}
+cat("Visit my GitHub repository: [SDS-315](https://github.com/pr10196/SDS-315/blob/main/SDS%20315%20HW9.Rmd")
+```
+
+## Problem 1
+
+
+## Part A
+
+```{r, echo=FALSE}
+library(dplyr)
+library(tidyverse)
+library(mosaic)
+
+turnout <- read.csv("turnout.csv")
+head(turnout)
+
+# Calculated proportion of those receiving a GOTV call who voted in 1998
+propVotedGOTV <- mean(turnout$voted1998[turnout$GOTV_call == 1])
+
+#Calculated sample proportion of those not receiving a GOTV call who voted in 1998
+propVotedNoGOTV <- mean(turnout$voted1998[turnout$GOTV_call == 0])
+
+numGOTV <- sum(turnout$GOTV_call == 1)
+numNoGOTV <- sum(turnout$GOTV_call == 0)
+
+seDiffProp <- sqrt(propVotedGOTV * (1 - propVotedGOTV) / numGOTV + propVotedNoGOTV * (1 - propVotedNoGOTV) / numNoGOTV)
+
+diffProp <- propVotedGOTV - propVotedNoGOTV
+ciLower <- diffProp - 1.96 * seDiffProp
+ciUpper <- diffProp + 1.96 * seDiffProp
+```
+
+
+## Part B
+
+```{r, echo=FALSE}
+library(ggplot2)
+
+ggplot(turnout, aes(x = AGE, fill = factor(GOTV_call))) + 
+  geom_density(alpha = 0.5) + 
+  facet_wrap(~ MAJORPTY) +
+  labs(x = "Age", y = "Density", fill = "Received GOTV Call") +
+  theme_minimal()
+```
+
+## Part C
+
+```{r, echo=FALSE}
+library(MatchIt)
+
+# Perform matching based on confounding variables
+matchingVariables <- matchit(GOTV_call ~ voted1996 + AGE + MAJORPTY, data = turnout, method = "nearest", ratio = 5)
+
+# Create matched dataset
+matchedDataset <- match.data(matchingVariables)
+
+# Calculate proportions and confidence interval in the matched dataset
+propVotedGOTV_matched <- mean(matchedDataset$voted1998[matchedDataset$GOTV_call == 1], na.rm = TRUE)
+propVotedNoGOTV_matched <- mean(matchedDataset$voted1998[matchedDataset$GOTV_call == 0], na.rm = TRUE)
+
+numGOTV_matched <- sum(matchedDataset$GOTV_call == 1)
+numNoGOTV_matched <- sum(matchedDataset$GOTV_call == 0)
+
+# Calculate difference in proportions
+diffProp_matched <- propVotedGOTV_matched - propVotedNoGOTV_matched
+
+# Calculate standard error of the difference in proportions
+seDiffProp_matched <- sqrt(propVotedGOTV_matched * (1 - propVotedGOTV_matched) / numGOTV_matched + propVotedNoGOTV_matched * (1 - propVotedNoGOTV_matched) / numNoGOTV_matched)
+
+# Calculate 95% confidence interval for the difference in proportions
+ciLower_matched <- diffProp_matched - 1.96 * seDiffProp_matched
+ciUpper_matched <- diffProp_matched + 1.96 * seDiffProp_matched
+
+```
+
+After calculating the confidence interval with the newly created dataset and using the GOTV_call as the treatment variable and the three confounding variables as the matching variables, we are 95% confident that approximately 0.8% to 13.9% more of the people who voted in the year 1998 received the GOTV call. In addition, as the confidence interval of the matched dataset is statistically significant, the interval supports the idea that the GOTV call positively influenced the voter turnout in 1998.       
+
+## Problem 2
+
+```{r, echo=FALSE}
+solder <- read.csv("solder.csv")
+
+library(ggplot2)
+library(dplyr)
+```
+
+## Part A
+
+```{r, echo=FALSE}
+ggplot(solder, aes(x = Opening, y = skips)) +
+  geom_boxplot(fill = "orange") +
+  labs(title = "Impact of Opening Size on Skips",
+       x = "Size of Opening on Solder Gun",
+       y = "Number of Skips")
+
+
+ggplot(solder, aes(x = Solder, y = skips)) +
+  geom_boxplot(fill = "blue") +
+  labs(title = "Relationship Between Solder Thickness and Skips",
+       x = "Alloy Thickness (Solder)",
+       y = "Count of Skips")
+```
+
+The first plot is a boxplot that displays the relationship between the size of the opening on the solder gun and the number of solder skips that are detected during the manufacturing process. In comparison, the second plot is also a boxplot that displays the relationship between the thickness of the the utilized solder alloy and the number of solder skips that are are detected in the manufacturing process.  
+
+
+## Part B
+
+```{r, echo=FALSE}
+library(moderndive)
+
+model <- lm(skips ~ Opening * Solder, data = solder)
+regressionTable <- get_regression_table(model)
+regressionTable
+```
+
+## Part C
+
+The solder skips occurs when the size of the opening on the solder gun is large and the opening is large, which is approximately 0.39.
+When the Opening is medium, the main effect is approximately 2.41 skips.
+When the Opening is small, the main effect is approximately 5.13 skips.
+When the Solder is thin, the main effect is approximately 2.28 skips.
+The value -0.740 represents the interaction effect of the medium Opening and the thin Solder on the predicted amount of skips.
+The value 9.653 represents the interaction effect of the small Opening and the thin Solder on the predicted amount of skips.
+
+
+## Part D
+
+I would recommend a thin Solder and a medium opening because the interaction effect between these two variables, -0.74, is negative, meaning that the actual number of skips occur less than they are expected to occur. By utilizing this combination, AT&T would be able to accomplish their primary goal of minimizing the number of skips in their manufacturing process. 
