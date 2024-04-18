@@ -1,0 +1,129 @@
+---
+title: "SDS 315 HW 9"
+author: "Pranav Rao"
+date: "2024-04-17"
+output: pdf_document
+---
+
+
+## Problem 1
+
+
+## Part A
+
+```{r, echo=FALSE}
+library(dplyr)
+library(tidyverse)
+library(mosaic)
+
+turnout <- read.csv("turnout.csv")
+head(turnout)
+
+# Calculated proportion of those receiving a GOTV call who voted in 1998
+propVotedGOTV <- mean(turnout$voted1998[turnout$GOTV_call == 1])
+
+#Calculated sample proportion of those not receiving a GOTV call who voted in 1998
+propVotedNoGOTV <- mean(turnout$voted1998[turnout$GOTV_call == 0])
+
+numGOTV <- sum(turnout$GOTV_call == 1)
+numNoGOTV <- sum(turnout$GOTV_call == 0)
+
+seDiffProp <- sqrt(propVotedGOTV * (1 - propVotedGOTV) / numGOTV + propVotedNoGOTV * (1 - propVotedNoGOTV) / numNoGOTV)
+
+diffProp <- propVotedGOTV - propVotedNoGOTV
+ciLower <- diffProp - 1.96 * seDiffProp
+ciUpper <- diffProp + 1.96 * seDiffProp
+```
+
+
+## Part B
+
+```{r, echo=FALSE}
+library(ggplot2)
+
+ggplot(turnout, aes(x = AGE, fill = factor(GOTV_call))) + 
+  geom_density(alpha = 0.5) + 
+  facet_wrap(~ MAJORPTY) +
+  labs(x = "Age", y = "Density", fill = "Received GOTV Call") +
+  theme_minimal()
+```
+
+## Part C
+
+```{r, echo=FALSE}
+# Perform matching based on confounding variables
+matchingVariables <- matchit(GOTV_call ~ voted1996 + AGE + MAJORPTY, data = turnout, method = "nearest", ratio = 5)
+
+# Create matched dataset
+matchedDataset <- match.data(matchingVariables)
+
+# Calculate proportions and confidence interval in the matched dataset
+propVotedGOTV_matched <- mean(matchedDataset$voted1998[matchedDataset$GOTV_call == 1], na.rm = TRUE)
+propVotedNoGOTV_matched <- mean(matchedDataset$voted1998[matchedDataset$GOTV_call == 0], na.rm = TRUE)
+
+numGOTV_matched <- sum(matchedDataset$GOTV_call == 1)
+numNoGOTV_matched <- sum(matchedDataset$GOTV_call == 0)
+
+# Calculate difference in proportions
+diffProp_matched <- propVotedGOTV_matched - propVotedNoGOTV_matched
+
+# Calculate standard error of the difference in proportions
+seDiffProp_matched <- sqrt(propVotedGOTV_matched * (1 - propVotedGOTV_matched) / numGOTV_matched + propVotedNoGOTV_matched * (1 - propVotedNoGOTV_matched) / numNoGOTV_matched)
+
+# Calculate 95% confidence interval for the difference in proportions
+ciLower_matched <- diffProp_matched - 1.96 * seDiffProp_matched
+ciUpper_matched <- diffProp_matched + 1.96 * seDiffProp_matched
+
+# Output results for matched dataset
+cat("Proportion of matched GOTV recipients who voted in 1998:", propVotedGOTV_matched, "\n")
+cat("Proportion of matched non-GOTV recipients who voted in 1998:", propVotedNoGOTV_matched, "\n")
+cat("95% Confidence Interval for the difference in proportions (matched data):", ciLower_matched, "-", ciUpper_matched, "\n")
+
+
+
+## FIX THIS!!!!!!!!!!!!!!!!
+
+## ANSWER THE QUESTION: What do you conclude about the overall effect of the GOTV call on the likelihood of voting in the 1998 election?
+
+```
+
+## Problem 2
+
+```{r, echo=FALSE}
+solder <- read.csv("solder.csv")
+
+library(ggplot2)
+library(dplyr)
+```
+
+## Part A
+
+```{r, echo=FALSE}
+ggplot(solder, aes(x = Opening, y = skips)) +
+  geom_boxplot(fill = "orange") +
+  labs(title = "Impact of Opening Size on Skips",
+       x = "Size of Opening on Solder Gun",
+       y = "Number of Skips")
+
+
+ggplot(solder, aes(x = Solder, y = skips)) +
+  geom_boxplot(fill = "blue") +
+  labs(title = "Relationship Between Solder Thickness and Skips",
+       x = "Alloy Thickness (Solder)",
+       y = "Count of Skips")
+```
+
+```{r, echo=FALSE}
+library(moderndive)
+
+model <- lm(skips ~ Opening * Solder, data = solder)
+regressionTable <- get_regression_table(model)
+regressionTable
+```
+
+## Part C
+
+
+
+## Part D
+
