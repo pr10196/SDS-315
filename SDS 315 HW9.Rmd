@@ -5,6 +5,9 @@ date: "2024-04-17"
 output: pdf_document
 ---
 
+```{r , echo=FALSE}
+cat("Visit my GitHub repository: [SDS-315](https://github.com/pr10196/SDS-315/blob/main/SDS%20315%20HW9.Rmd")
+```
 
 ## Problem 1
 
