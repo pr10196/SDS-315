@@ -12,7 +12,7 @@ UTEID: pr25344
 
 
 ```{r, echo=FALSE}
-cat("Visit my GitHub repository: [SDS-315](https://github.com/pr10196/SDS-315/blob/main/SDS%20315%20HW10.Rmd")
+cat("Visit my GitHub repository: [SDS-315](https://github.com/pr10196/SDS-315/edit/main/SDS%20315%20HW10.Rmd")
 ```
 
 ## Question 1
