@@ -1,0 +1,156 @@
+---
+title: "SDS 315 HW 10"
+author: "Pranav Rao"
+date: "2024-04-21"
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+UTEID: pr25344
+---
+
+
+```{r, echo=FALSE}
+cat("Visit my GitHub repository: [SDS-315](")
+```
+
+## Question 1
+
+
+```{r, echo=FALSE}
+redlining <- read.csv("redlining.csv")
+
+redlining_model <- lm(policies ~ minority + fire + age + income, data = redlining)
+summary(redlining_model)
+confint_model <- confint(redlining_model)
+```
+
+## 1)
+The question that I am trying to answer is is there an association between the racial/ethnic composition of ZIP codes and the number of FAIR policies used, when adjusting for fire incidents, age of housing units, and median family income?
+
+## 2)
+I utilized a linear regression model to in order to answer the question above. The model used the number of FAIR policies as the outcome variable, with minority proportion, fire occurrences, housing unit age, and median family income as predictors.
+
+## 3) 
+From calculating the summary statistics of the linear regression model, I found that the mean of the residuals of the regression model is close to 0, signifying that the actual 'policies' values do deviate from the predicted 'policies' values in the model. In addition, the minority coefficient value, 0.008359, conveys that the number of FAIR policies increase by 0.008359 per housing units for every 1 percent increase in the minority population in a specific ZIP code. Additionally, the coefficient for fire, 0.021739, conveys that the number of FAIR policies increases by 0.021739 per 100 housing units for every additional fire incident per 100 units in a specific ZIP code. The coefficient for age, 0.005623, conveys that the number of FAIR policies issued is not significantly influenced by the age of housing units in a specific ZIP area. Lastly, the coefficient for income, -0.015965, conveys that the median family income has no meaningful influence on the number of FAIR policies issued. 
+
+## 4)
+According to the data, higher minority populations in Chicago ZIP codes are associated with a greater reliance on FAIR coverage, indicating difficulty entering private insurance markets.
+There was an estimated confidence interval of 0.0025 to 0.0142 in extra FAIR policies per 1% rise in minority population. Moreover, a higher number of FAIR policies are issued in response to each new fire incidence per 100 housing units, indicating challenges in securing private coverage. This is estimated at 0.0039 to 0.0396 additional FAIR policies per additional fire incident. Lastly, FAIR insurance issuance impacted as much by the age of housing units or the median family income. Overall, these findings illustrate disparities in insurance availability based on risk factors and demography. All residents of the Chicago ZIP code may gain from more equitable insurance market practices if these disparities are addressed.
+
+
+## Problem 2
+
+```{r, echo=FALSE}
+groceries <- read.csv('groceries.csv')
+library(ggplot2)
+library(dplyr)
+```
+
+
+## Part A
+```{r, echo=FALSE}
+avgStorePrices <- groceries %>%
+  group_by(Store) %>%
+  summarize(avgPrice = mean(Price))
+ 
+ggplot(avgStorePrices, aes(x = avgPrice, y = Store)) + 
+  geom_bar(stat = "identity", fill = "orange") + 
+  labs(title = "Average Price of Grocery Products Across Stores",
+       x = "Average Price ($)", 
+       y = "Store") +
+  theme_minimal()
+```
+
+The bar graph above displays the average price of products in specific grocery stores across the cities Houston, Fort Worth, and Austin. The overall bar graph provides an understanding to the the variation of prices within these specific grocery stores in these three regions.
+
+## Part B
+```{r, echo=FALSE}
+numProductsInStore <- groceries %>%
+  group_by(Product) %>%
+  summarise(numStores = n_distinct(Store))
+
+ggplot(numProductsInStore, aes(x = numStores, y = Product)) +
+  geom_bar(stat = "identity", fill = "purple") + 
+  labs(title = "Availability of Products Across Different Stores",
+       x = "Number of Stores",
+       y = "Product") +
+  theme_minimal()
+```
+
+This bar graph depicts the distribution of food products according to the number of stores that sell each product. Each bar reflects the number of locations that carry a specific product, demonstrating the availability and popularity of various grocery goods throughout the sampled retailers.
+
+
+## Part C
+
+```{r, echo=FALSE}
+# Fit linear regression model to assess price difference between Convenience and Grocery stores
+groceryLRModel <- lm(Price ~ Product + Type, data = groceries)
+
+# Extract coefficients related to Type (e.g., Convenience vs. Grocery)
+modelSummary <- summary(groceryLRModel)
+groceryType <- modelSummary$coefficients[grep("^Type", rownames(modelSummary$coefficients)), ]
+print(groceryType)
+
+# Subset data for Convenience and Grocery stores
+groceryConvenience <- subset(groceries, Type == "Convenience ")
+normalGrocery <- subset(groceries, Type == "Grocery")
+
+# Perform bootstrap resampling to estimate price difference
+set.seed(123)  # Set seed for reproducibility
+nBoot <- 10000  # Number of bootstrap iterations
+bootstrapResample <- replicate(nBoot, {
+  convenienceSample <- sample(groceryConvenience$Price, replace = TRUE)
+  normalSample <- sample(normalGrocery$Price, replace = TRUE)
+  convenienceMean <- mean(convenienceSample, na.rm = TRUE)
+  normalMean <- mean(normalSample, na.rm = TRUE)
+  convenienceMean - normalMean
+})
+
+# Calculate confidence interval for the difference
+lowerBound <- quantile(bootstrapResample, 0.025, na.rm = TRUE)
+upperBound <- quantile(bootstrapResample, 0.975, na.rm = TRUE)
+
+# Round the bounds to two decimal places
+roundedLowerBound <- round(lowerBound, 2)
+roundedUpperBound <- round(upperBound, 2)
+```
+Compared with normal grocery stores, convenience stores charge between 0.05 and 1 dollar more on average.
+
+## Part D
+
+```{r, echo=FALSE}
+library(broom)
+linRegModel <- lm(Price ~ Product + Store, data = groceries)
+
+groceryRegTable <- tidy(linRegModel)
+```
+
+The stores, Walmart and Kroger Fresh Fare, have the lowest products when comparing the same product. The stores, Whole Foods and Wheatsville Food Co-Op, have the highest prices when comparing the same product.
+
+
+## Part E
+
+HEB and Central Market have coefficients of -0.646 and -0.573. When compared to the reference store, both of these stores sell items at discounted pricing. Based purely on the coefficients, it appears that Central Market sells products at a slightly higher price than HEB. Both Central Market and HEB have competitive prices when compared to the reference store, with HEB being slightly cheaper. Although the coefficients for Central Market and HEB are statistically significant, we cannot conclude that Central Market is more expensive. Price variations can be unpleasant when compared to other sellers, so the difference between Central Market and HEB does not appear significant.
+
+
+## Part F
+
+```{r, echo=FALSE}
+groceries <- groceries %>%
+  mutate(Income10K = ceiling(Income / 10000)) 
+incomeLRModel <- lm(Price ~ Product + Income10K, data = groceries)
+
+incomeLRCoefficient <- summary(incomeLRModel)$coefficients["Income10K", "Estimate"]
+
+incomeLRStdDev <- sd(groceries$Income10K)
+priceLRStdDev <- sd(incomeLRModel$residuals)
+
+```
+##a) 
+The coefficient for income, -0.01310013, suggests an inverse relationship between income and price, meaning that consumers in poorer ZIP codes pay less when purchasing identical goods on average. This is the case since incomes that are lower produce lower prices. Therefore, the coefficient suggests that income is a significant factor in generating pricing disparities between ZIP codes, with areas with lower incomes typically paying less for the identical products.
+
+##b)
+A one-standard deviation increase in the income of a ZIP code seems to be associated with
+a 0.76 standard-deviation change in the price that consumers in that ZIP code expect to pay for the same product.
